@@ -1,17 +1,18 @@
 """
 Application configuration settings
+Loads environment variables and provides app-wide settings
 """
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings
 from typing import List
 import os
 
 class Settings(BaseSettings):
-    """Application settings"""
+    """Application settings loaded from environment variables"""
     
     # Database
     DATABASE_URL: str
     
-    # JWT
+    # JWT Authentication
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -21,23 +22,23 @@ class Settings(BaseSettings):
     
     # File Upload
     UPLOAD_DIR: str = "./uploads"
-    MAX_FILE_SIZE: int = 5242880
+    MAX_FILE_SIZE: int = 5242880  # 5MB in bytes
     
     # Application
-    PROJECT_NAME: str = "AI Resume and JD Matching System"
+    PROJECT_NAME: str = "AI Resume Matcher"
     VERSION: str = "1.0.0"
     DEBUG: bool = True
     
     @property
     def cors_origins(self) -> List[str]:
-        """Parse CORS origins"""
+        """Parse CORS origins from comma-separated string"""
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
     
     class Config:
         env_file = ".env"
         case_sensitive = True
 
-# THIS LINE IS CRITICAL - Creates the settings instance
+# Create settings instance
 settings = Settings()
 
 # Create uploads directory if it doesn't exist

@@ -1,8 +1,8 @@
 """
 Test database connection
 """
-from app.database import init_db, engine
-from sqlalchemy import text
+from sqlalchemy import text, inspect
+from app.database import engine
 
 def test_connection():
     """Test connection"""
@@ -15,17 +15,28 @@ def test_connection():
         print(f"❌ Connection failed: {e}")
         return False
 
-def create_tables():
-    """Create tables"""
+def check_tables():
+    """Check if tables exist"""
     try:
-        init_db()
-        print("✅ All tables created!")
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        
+        print(f"\n📊 Tables in database: {len(tables)}")
+        for table in tables:
+            print(f"   ✅ {table}")
+        
+        if len(tables) == 4:
+            print("\n🎉 SUCCESS! All 4 tables exist!")
+            return True
+        else:
+            print(f"\n⚠️ Expected 4 tables, found {len(tables)}")
+            return False
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error checking tables: {e}")
+        return False
 
 if __name__ == "__main__":
-    print("Testing database...")
+    print("Testing database connection...")
     if test_connection():
-        print("\nCreating tables...")
-        create_tables()
+        check_tables()
         print("\n✅ Database setup complete!")
