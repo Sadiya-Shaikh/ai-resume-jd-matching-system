@@ -66,7 +66,7 @@ export default function Jobs() {
   }
 
   return (
-    <div className="fade-up">
+    <div className="fade-up page-enter">
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Header */}
@@ -77,7 +77,7 @@ export default function Jobs() {
             {jds.length} job description{jds.length !== 1 ? 's' : ''} created
           </p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} style={{
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)} style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           padding: '11px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer',
           background: showForm ? '#ffffff10' : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
@@ -109,7 +109,7 @@ export default function Jobs() {
             ].map(({ label, key, placeholder }) => (
               <div key={key}>
                 <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '6px', display: 'block', letterSpacing: '0.3px' }}>{label}</label>
-                <input style={inputStyle} placeholder={placeholder}
+                <input className="glow-border" style={inputStyle} placeholder={placeholder}
                   value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
                   onFocus={e => e.target.style.borderColor = '#8b5cf6'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'}
@@ -126,7 +126,7 @@ export default function Jobs() {
               onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
           </div>
-          <button onClick={handleSubmit} disabled={submitting} style={{
+          <button className="btn-primary" onClick={handleSubmit} disabled={submitting} style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             padding: '11px 24px', borderRadius: '10px', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
             background: submitting ? '#333' : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
@@ -141,7 +141,7 @@ export default function Jobs() {
       {/* Search */}
       <div style={{ position: 'relative', marginBottom: '20px' }}>
         <Search size={16} color="var(--text-secondary)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-        <input value={search} onChange={e => setSearch(e.target.value)}
+        <input className="glow-border" value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by title or company..."
           style={{
             width: '100%', padding: '11px 14px 11px 42px', borderRadius: '12px',
@@ -168,15 +168,15 @@ export default function Jobs() {
               </div>
               <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>No job descriptions yet</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>Create your first job description to start AI matching</p>
-              <button onClick={() => setShowForm(true)} style={{
+              <button className="btn-primary" onClick={() => setShowForm(true)} style={{
                 padding: '10px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'white',
                 fontWeight: 700, fontSize: '14px', fontFamily: 'DM Sans, sans-serif'
               }}>Create First Job</button>
             </div>
           ) : (
-            filtered.map((jd) => (
-              <div key={jd.jd_id} onClick={() => setSelected(jd)}
+            filtered.map((jd, i) => (
+              <div key={jd.jd_id} className={`card stagger-${(i % 8) + 1}`} onClick={() => setSelected(jd)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '16px 20px', marginBottom: '8px', borderRadius: '14px', cursor: 'pointer',

@@ -144,38 +144,59 @@ export default function LandingPage() {
         @media (max-width: 600px) {
           .feat-grid { grid-template-columns: 1fr !important; }
         }
+
+        @media (max-width: 768px) {
+        .desktop-nav { display: none !important; }
+        .hero-inner { flex-direction: column !important; gap: 40px !important; }
+        .hero-visual { display: none !important; }
+        .feat-grid { grid-template-columns: 1fr !important; }
+        .steps-grid { grid-template-columns: 1fr !important; }
+        .stats-row { grid-template-columns: 1fr !important; }
+        .stat-divider { border-right: none !important; border-bottom: 1px solid #161929; }
+        section { padding: 60px 20px !important; }
+        nav { padding: 0 16px !important; }
+      }
+
+      @media (max-width: 480px) {
+      h1 { font-size: 36px !important; }
+      .btn-ghost { display: none; }
+      }
       `}</style>
 
       {/* NAV */}
       <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
-        height: '64px', padding: '0 40px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: scrolled ? 'rgba(6,8,16,0.90)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(24px)' : 'none',
-        borderBottom: scrolled ? '1px solid #161929' : 'none',
-        transition: 'all 0.3s'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'linear-gradient(135deg, #3b6fff, #7c5cfc)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Cpu size={17} color="#fff" strokeWidth={2} />
-          </div>
-          <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: '16px', letterSpacing: '-0.4px' }}>RecruitAI</span>
-        </div>
+       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+       height: '64px', padding: '0 20px',
+       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+       background: scrolled ? 'rgba(6,8,16,0.90)' : 'transparent',
+       backdropFilter: scrolled ? 'blur(24px)' : 'none',
+       borderBottom: scrolled ? '1px solid #161929' : 'none',
+       transition: 'all 0.3s'
+}}>
+  {/* Logo */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'linear-gradient(135deg, #3b6fff, #7c5cfc)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Cpu size={17} color="#fff" strokeWidth={2} />
+    </div>
+    <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: '16px', letterSpacing: '-0.4px' }}>RecruitAI</span>
+  </div>
 
-        <div style={{ display: 'flex', gap: '28px' }}>
-          {[['features', 'Features'], ['how-it-works', 'How it works'], ['about', 'About']].map(([id, label]) => (
-            <button key={id} className="nav-btn" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })}>{label}</button>
-          ))}
-        </div>
+  {/* Center links — HIDDEN on mobile */}
+  <div style={{ display: 'flex', gap: '28px', '@media(max-width:768px)': { display: 'none' } }}
+    className="desktop-nav">
+    {[['features', 'Features'], ['how-it-works', 'How it works'], ['about', 'About']].map(([id, label]) => (
+      <button key={id} className="nav-btn" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })}>{label}</button>
+    ))}
+  </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button className="nav-btn" onClick={() => navigate('/login')}>Sign in</button>
-          <button className="btn-main" style={{ padding: '9px 20px', fontSize: '13px' }} onClick={() => navigate('/register')}>
-            Get Started <ArrowRight size={14} />
-          </button>
-        </div>
-      </nav>
+      {/* Right CTA */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <button className="nav-btn" onClick={() => navigate('/login')} style={{ display: window.innerWidth < 480 ? 'none' : 'block' }}>Sign in</button>
+       <button className="btn-main" style={{ padding: '9px 16px', fontSize: '13px' }} onClick={() => navigate('/register')}>
+      Get Started <ArrowRight size={14} />
+       </button>
+      </div>
+     </nav>
 
       {/* HERO */}
       <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '120px 40px 80px', overflow: 'hidden' }}>

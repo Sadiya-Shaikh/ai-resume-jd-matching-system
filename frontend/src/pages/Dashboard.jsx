@@ -28,7 +28,7 @@ const StatCard = ({ icon: Icon, label, value, color, bg }) => (
 )
 
 const VerdictBar = ({ icon: Icon, label, value, total, color }) => (
-  <div style={{ marginBottom: '16px' }}>
+  <div className="hover-lift" style={{ marginBottom: '16px' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Icon size={14} color={color} />
@@ -36,12 +36,12 @@ const VerdictBar = ({ icon: Icon, label, value, total, color }) => (
       </div>
       <span style={{ fontSize: '13px', fontWeight: 700, color }}>{value}</span>
     </div>
-    <div style={{ height: '5px', background: '#ffffff08', borderRadius: '3px', overflow: 'hidden' }}>
+    <div className="progress-bar" style={{ '--target-width': `${total > 0 ? (value / total) * 100 : 0}%`, height: '5px', background: '#ffffff08', borderRadius: '3px', overflow: 'hidden' }}>
       <div style={{
-        height: '100%', width: `${total > 0 ? (value / total) * 100 : 0}%`,
+        height: '100%', width: '100%',
         background: `linear-gradient(90deg, ${color}, ${color}99)`,
-        borderRadius: '3px', transition: 'width 1s cubic-bezier(0.4,0,0.2,1)'
-      }}/>
+        borderRadius: '3px'
+      }} />
     </div>
   </div>
 )
@@ -88,7 +88,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="fade-up">
+    <div className="fade-up page-enter">
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Header */}
@@ -105,15 +105,15 @@ export default function Dashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap' }}>
-        <StatCard icon={FileText} label="Total Resumes" value={stats?.total_resumes || 0} color="#4f8eff" />
-        <StatCard icon={Briefcase} label="Job Descriptions" value={stats?.total_job_descriptions || 0} color="#8b5cf6" />
-        <StatCard icon={Target} label="Total Matches" value={stats?.total_matches || 0} color="#10b981" />
-        <StatCard icon={TrendingUp} label="Avg Match Score" value={`${stats?.average_match_score || 0}%`} color="#f59e0b" />
+      <div className="dashboard-cards" style={{ display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap' }}>
+        <div className="stat-card stagger-1 card"><StatCard icon={FileText} label="Total Resumes" value={stats?.total_resumes || 0} color="#4f8eff" /></div>
+        <div className="stat-card stagger-2 card"><StatCard icon={Briefcase} label="Job Descriptions" value={stats?.total_job_descriptions || 0} color="#8b5cf6" /></div>
+        <div className="stat-card stagger-3 card"><StatCard icon={Target} label="Total Matches" value={stats?.total_matches || 0} color="#10b981" /></div>
+        <div className="stat-card stagger-4 card"><StatCard icon={TrendingUp} label="Avg Match Score" value={`${stats?.average_match_score || 0}%`} color="#f59e0b" /></div>
       </div>
 
       {/* Bottom Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
+      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
 
         {/* Verdict Breakdown */}
         <div className="card">

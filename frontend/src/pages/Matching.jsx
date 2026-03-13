@@ -12,7 +12,7 @@ const ScoreCircle = ({ score }) => {
     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#ffffff08" strokeWidth="10" />
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color}
+        <circle className="score-ring-path" cx={size/2} cy={size/2} r={radius} fill="none" stroke={color}
           strokeWidth="10" strokeLinecap="round"
           strokeDasharray={circumference} strokeDashoffset={offset}
           style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)' }}
@@ -226,18 +226,18 @@ export default function Matching() {
         {/* Single Result */}
         {result && mode === 'single' && (
           <div style={{ flex: 1, minWidth: '300px' }}>
-            <div className="card" style={{ border: `1px solid ${verdictColor(result.verdict)}30`, marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Match Result</h3>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
-                  background: `${verdictColor(result.verdict)}15`, color: verdictColor(result.verdict),
-                  border: `1px solid ${verdictColor(result.verdict)}30`
-                }}>
-                  {verdictIcon(result.verdict)}
-                  {result.verdict}
-                </div>
+<div className="card scale-in" style={{ border: `1px solid ${verdictColor(result.verdict)}30`, marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Match Result</h3>
+              <span className="verdict-pill" style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
+                background: `${verdictColor(result.verdict)}15`, color: verdictColor(result.verdict),
+                border: `1px solid ${verdictColor(result.verdict)}30`
+              }}>
+                {verdictIcon(result.verdict)}
+                {result.verdict}
+              </span>
               </div>
 
               <ScoreCircle score={result.match_score} />
@@ -284,7 +284,7 @@ export default function Matching() {
         {/* Bulk Results */}
         {bulkResults && mode === 'bulk' && (
           <div style={{ flex: 1, minWidth: '300px' }}>
-            <div className="card">
+            <div className="card scale-in">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Bulk Results</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: '#10b98115', fontSize: '12px', color: '#10b981', fontWeight: 700 }}>
@@ -316,13 +316,13 @@ export default function Matching() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'Syne', color: verdictColor(r.verdict), letterSpacing: '-0.5px' }}>{r.match_score}%</div>
-                    <div style={{
+                    <span className="verdict-pill" style={{
                       display: 'inline-flex', alignItems: 'center', gap: '4px',
                       fontSize: '11px', color: verdictColor(r.verdict), fontWeight: 700,
                       padding: '2px 8px', borderRadius: '20px', background: `${verdictColor(r.verdict)}15`
                     }}>
                       {verdictIcon(r.verdict)} {r.verdict}
-                    </div>
+                    </span>
                   </div>
                 </div>
               ))}

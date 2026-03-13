@@ -15,7 +15,7 @@ const perks = [
 
 export default function Register() {
   const navigate = useNavigate()
-  const { register } = useAuth()
+  const { login } = useAuth()
   const [form, setForm] = useState({ full_name: '', email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -25,32 +25,52 @@ export default function Register() {
   const update = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   const handleSubmit = async () => {
-    setError('')
-    if (!form.full_name || !form.email || !form.password) {
-      setError('Please fill in all fields.')
-      return
-    }
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
-    setLoading(true)
-    try {
-      await register(form.full_name, form.email, form.password)
-      navigate('/')
-    } catch (err) {
-      setError(err?.response?.data?.detail || 'Registration failed. Try a different email.')
-    } finally {
-      setLoading(false)
-    }
+  setError('')
+  if (!form.full_name || !form.email || !form.password) {
+    setError('Please fill in all fields.')
+    return
   }
+  setLoading(true)
+  try {
+    // Step 1 — register
+    const regResponse = await fetch('http://localhost:8000/api/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name: form.full_name, email: form.email, password: form.password })
+    })
+
+    if (!regResponse.ok) {
+      const err = await regResponse.json()
+      throw new Error(err.detail || 'Registration failed')
+    }
+
+    // Step 2 — auto login after register
+    const formData = new FormData()
+    formData.append('username', form.email)
+    formData.append('password', form.password)
+
+    const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login', {
+      method: 'POST',
+      body: formData
+    })
+
+    const data = await loginResponse.json()
+    login(data.access_token, { email: form.email, full_name: form.full_name })
+
+    navigate('/dashboard')
+
+  } catch (err) {
+    setError(err.message || 'Registration failed. Try a different email.')
+  } finally {
+    setLoading(false)
+  }
+}
 
   const handleKey = (e) => { if (e.key === 'Enter') handleSubmit() }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#060810', overflow: 'hidden' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -112,7 +132,7 @@ export default function Register() {
       `}</style>
 
       {/* RIGHT PANEL (form) — shown first on mobile */}
-      <div className="right-panel" style={{
+      <div className="right-panel auth-right-panel" style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '48px 40px', background: '#07090f',
         position: 'relative', overflow: 'hidden',
@@ -140,7 +160,7 @@ export default function Register() {
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#5a6380', marginBottom: '8px' }}>Full Name</label>
             <div style={{ position: 'relative' }}>
               <User size={15} color={focused === 'name' ? '#3b6fff' : '#3c4560'} strokeWidth={2} className="inp-icon" />
-              <input className="inp" type="text" placeholder="Your full name"
+              <input className="inp glow-border" type="text" placeholder="Your full name"
                 value={form.full_name} onChange={e => update('full_name', e.target.value)}
                 onFocus={() => setFocused('name')} onBlur={() => setFocused('')}
                 onKeyDown={handleKey} />
@@ -152,7 +172,7 @@ export default function Register() {
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#5a6380', marginBottom: '8px' }}>Email Address</label>
             <div style={{ position: 'relative' }}>
               <Mail size={15} color={focused === 'email' ? '#3b6fff' : '#3c4560'} strokeWidth={2} className="inp-icon" />
-              <input className="inp" type="email" placeholder="you@example.com"
+              <input className="inp glow-border" type="email" placeholder="you@example.com"
                 value={form.email} onChange={e => update('email', e.target.value)}
                 onFocus={() => setFocused('email')} onBlur={() => setFocused('')}
                 onKeyDown={handleKey} />
@@ -164,7 +184,7 @@ export default function Register() {
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#5a6380', marginBottom: '8px' }}>Password</label>
             <div style={{ position: 'relative' }}>
               <Lock size={15} color={focused === 'password' ? '#3b6fff' : '#3c4560'} strokeWidth={2} className="inp-icon" />
-              <input className="inp" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters"
+              <input className="inp glow-border" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters"
                 value={form.password} onChange={e => update('password', e.target.value)}
                 onFocus={() => setFocused('password')} onBlur={() => setFocused('')}
                 onKeyDown={handleKey} style={{ paddingRight: '44px' }} />
@@ -211,7 +231,7 @@ export default function Register() {
       </div>
 
       {/* LEFT PANEL */}
-      <div className="left-panel" style={{
+      <div className="left-panel auth-left-panel" style={{
         flex: '0 0 52%', position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(135deg, #060810 0%, #090c1a 60%, #0a0c1e 100%)',
         borderLeft: '1px solid #161929',

@@ -120,7 +120,7 @@ export default function Analytics() {
   const highlyRec = stats?.verdict_breakdown?.highly_recommended || 0
 
   return (
-    <div className="fade-up">
+    <div className="fade-up page-enter">
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Header */}
@@ -149,10 +149,10 @@ export default function Analytics() {
       ) : (
         <>
           {/* Row 1 - Pie + Bar */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '16px', marginBottom: '16px' }}>
 
             {/* Verdict Pie */}
-            <div className="card">
+            <div className="card stagger-1">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#8b5cf615', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Target size={15} color="#8b5cf6" />
@@ -191,7 +191,7 @@ export default function Analytics() {
             </div>
 
             {/* Score Distribution Bar */}
-            <div className="card">
+            <div className="card stagger-2">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#4f8eff15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <BarChart3 size={15} color="#4f8eff" />
@@ -217,10 +217,10 @@ export default function Analytics() {
           </div>
 
           {/* Row 2 - Line Charts */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
             {/* Score Trend */}
-            <div className="card">
+            <div className="card stagger-3">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#10b98115', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <TrendingUp size={15} color="#10b981" />
@@ -245,7 +245,7 @@ export default function Analytics() {
             </div>
 
             {/* Matches Per Day */}
-            <div className="card">
+            <div className="card stagger-4">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f59e0b15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Zap size={15} color="#f59e0b" />

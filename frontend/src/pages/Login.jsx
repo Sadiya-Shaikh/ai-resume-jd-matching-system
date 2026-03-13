@@ -43,25 +43,37 @@ export default function Login() {
   const [error, setError] = useState('')
   const [focused, setFocused] = useState('')
 
-  const handleSubmit = async () => {
-    setError('')
-    setLoading(true)
-    try {
-      await login(email, password)
-      navigate('/')
-    } catch {
-      setError('Invalid email or password. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+const handleSubmit = async () => {
+  setError('')
+  setLoading(true)
+  try {
+    const formData = new FormData()
+    formData.append('username', email)      // ← uses email, not form.email
+    formData.append('password', password)   // ← uses password, not form.password
 
+    const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) throw new Error('Invalid credentials')
+
+    const data = await response.json()
+    login(data.access_token, data.user || { email })
+    navigate('/dashboard')
+
+  } catch {
+    setError('Invalid email or password. Please try again.')
+  } finally {
+    setLoading(false)
+  }
+}
   const handleKey = (e) => { if (e.key === 'Enter') handleSubmit() }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#060810', overflow: 'hidden' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         @keyframes fadeUp {
@@ -200,7 +212,7 @@ export default function Login() {
       `}</style>
 
       {/* ── LEFT PANEL ── */}
-      <div className="left-panel" style={{
+      <div className="left-panel auth-left-panel" style={{
         flex: '0 0 52%', position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(135deg, #060810 0%, #090c1a 60%, #0a0c1e 100%)',
         borderRight: '1px solid #161929',
@@ -297,7 +309,7 @@ export default function Login() {
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div className="right-panel" style={{
+      <div className="right-panel auth-right-panel" style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '48px 40px', background: '#07090f', position: 'relative', overflow: 'hidden'
       }}>
@@ -334,7 +346,7 @@ export default function Login() {
             </label>
             <div className="input-wrap">
               <Mail size={15} color={focused === 'email' ? '#3b6fff' : '#3c4560'} strokeWidth={2} className="inp-icon" />
-              <input className="inp" type="email" placeholder="you@example.com"
+              <input className="inp glow-border" type="email" placeholder="you@example.com"
                 value={email} onChange={e => setEmail(e.target.value)}
                 onFocus={() => setFocused('email')} onBlur={() => setFocused('')}
                 onKeyDown={handleKey} />
@@ -348,7 +360,7 @@ export default function Login() {
             </label>
             <div className="input-wrap">
               <Lock size={15} color={focused === 'password' ? '#3b6fff' : '#3c4560'} strokeWidth={2} className="inp-icon" />
-              <input className="inp" type={showPass ? 'text' : 'password'} placeholder="Enter your password"
+              <input className="inp glow-border" type={showPass ? 'text' : 'password'} placeholder="Enter your password"
                 value={password} onChange={e => setPassword(e.target.value)}
                 onFocus={() => setFocused('password')} onBlur={() => setFocused('')}
                 onKeyDown={handleKey} style={{ paddingRight: '44px' }} />
