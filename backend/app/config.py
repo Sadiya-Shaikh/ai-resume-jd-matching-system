@@ -28,7 +28,15 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Resume Matcher"
     VERSION: str = "1.0.0"
     DEBUG: bool = True
-    
+
+    # Email Configuration
+    EMAIL_METHOD: str = "gmail"
+    GMAIL_USER: str = ""
+    GMAIL_APP_PASSWORD: str = ""
+    SENDGRID_API_KEY: str = ""
+    SENDGRID_FROM_EMAIL: str = ""
+    SENDGRID_FROM_NAME: str = "RecruitAI"
+
     @property
     def cors_origins(self) -> List[str]:
         """Parse CORS origins from comma-separated string"""

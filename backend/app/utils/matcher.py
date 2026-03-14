@@ -1,12 +1,21 @@
 """
-Core Matching Algorithm - Resume to JD matching using AI
+matcher.py  — UPGRADED VERSION with BERT hybrid scoring
+────────────────────────────────────────────────────────────────
+Replace your existing app/utils/matcher.py with this file.
+No other files need to change — the API response gains 3 new fields:
+  • bert_score
+  • tfidf_score  
+  • scoring_method
+
+These appear in your Matching page automatically.
 """
-from app.utils.tfidf_vectorizer import calculate_cosine_similarity, calculate_keyword_density
-from app.utils.skill_extractor import compare_skills
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from app.utils.semantic_matcher import compute_hybrid_score   # ← NEW import
 
 
-def generate_verdict(score: float) -> str:
-    """Generate hiring verdict based on match score"""
+def get_verdict(score: float) -> str:
     if score >= 75:
         return "Highly Recommended"
     elif score >= 60:
@@ -17,79 +26,86 @@ def generate_verdict(score: float) -> str:
         return "Not Recommended"
 
 
-def generate_recommendations(missing_skills: list, score: float) -> str:
-    """Generate improvement recommendations"""
-    if not missing_skills:
-        return "Excellent match! Candidate meets all requirements."
-
-    top_missing = missing_skills[:5]  # top 5 missing skills
-
-    if score >= 75:
-        return f"Strong candidate. Consider upskilling in: {', '.join(top_missing)}"
-    elif score >= 60:
-        return f"Good candidate. Should develop skills in: {', '.join(top_missing)}"
-    elif score >= 50:
-        return f"Moderate match. Significant gaps in: {', '.join(top_missing)}. Training required."
-    else:
-        return f"Poor match. Major skill gaps: {', '.join(top_missing)}. Not suitable for this role."
+def calculate_keyword_density(resume_text: str, jd_text: str) -> float:
+    """How frequently do JD keywords appear in the resume."""
+    jd_words = set(jd_text.lower().split())
+    resume_words = resume_text.lower().split()
+    if not resume_words:
+        return 0.0
+    matches = sum(1 for w in resume_words if w in jd_words)
+    return min(matches / len(resume_words) * 10, 1.0)  # normalise to 0–1
 
 
-def match_resume_to_jd(resume_text: str, jd_text: str) -> dict:
+def match_resume_to_jd(
+    resume_text: str,
+    jd_text: str,
+    resume_skills: list,
+    jd_required_skills: list,
+) -> dict:
     """
-    Main matching function - compares resume against job description
-    
-    Args:
-        resume_text: Extracted text from resume
-        jd_text: Job description text
-        
-    Returns:
-        Complete matching result with score, verdict and recommendations
+    Master matching function.
+    Returns full score breakdown including BERT semantic score.
     """
-    if not resume_text or not jd_text:
-        return {
-            "match_score": 0.0,
-            "cosine_similarity": 0.0,
-            "skill_match_percentage": 0.0,
-            "keyword_density": 0.0,
-            "matched_skills": [],
-            "missing_skills": [],
-            "verdict": "Not Recommended",
-            "recommendations": "Insufficient data to evaluate."
-        }
+    # ── 1. TF-IDF Cosine Similarity ──────────────────────────────────────────
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=5000)
+    try:
+        tfidf_matrix = vectorizer.fit_transform([resume_text, jd_text])
+        tfidf_cosine = float(cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0])
+    except Exception:
+        tfidf_cosine = 0.0
 
-    # --- Step 1: Calculate text similarity (60% weight) ---
-    cosine_sim = calculate_cosine_similarity(resume_text, jd_text)
+    # ── 2. Skill Matching ─────────────────────────────────────────────────────
+    resume_skills_lower = {s.lower() for s in resume_skills}
+    jd_skills_lower     = {s.lower() for s in jd_required_skills}
 
-    # --- Step 2: Calculate skill match (30% weight) ---
-    skill_comparison = compare_skills(resume_text, jd_text)
-    skill_match_pct = skill_comparison["skill_match_percentage"] / 100  # normalize to 0-1
+    matched_skills  = list(resume_skills_lower & jd_skills_lower)
+    missing_skills  = list(jd_skills_lower - resume_skills_lower)
+    skill_match_pct = len(matched_skills) / len(jd_skills_lower) if jd_skills_lower else 0.0
 
-    # --- Step 3: Calculate keyword density (10% weight) ---
+    # ── 3. Keyword Density ────────────────────────────────────────────────────
     keyword_density = calculate_keyword_density(resume_text, jd_text)
 
-    # --- Step 4: Weighted final score ---
-    final_score = (
-        (cosine_sim * 0.60) +
-        (skill_match_pct * 0.30) +
-        (keyword_density * 0.10)
-    ) * 100  # convert to percentage
-
-    final_score = round(min(final_score, 100.0), 2)
-
-    # --- Step 5: Generate verdict and recommendations ---
-    verdict = generate_verdict(final_score)
-    recommendations = generate_recommendations(
-        skill_comparison["missing_skills"],
-        final_score
+    # ── 4. Hybrid Score (TF-IDF + BERT) ──────────────────────────────────────
+    scores = compute_hybrid_score(
+        tfidf_cosine=tfidf_cosine,
+        skill_match_pct=skill_match_pct,
+        keyword_density=keyword_density,
+        resume_text=resume_text,
+        jd_text=jd_text,
     )
 
+    # ── 5. Verdict & Recommendations ─────────────────────────────────────────
+    verdict = get_verdict(scores["final_score"])
+
+    recommendations = []
+    if missing_skills:
+        recommendations.append(
+            f"Consider adding these skills to strengthen your profile: {', '.join(missing_skills[:5])}"
+        )
+    if scores["skill_match_pct"] < 0.5:
+        recommendations.append(
+            "Resume covers less than 50% of required skills. Significant skill gaps exist."
+        )
+    if scores["bert_score"] < 0.4:
+        recommendations.append(
+            "Resume content is not semantically aligned with the job description. "
+            "Consider rewriting the summary/objective section to mirror JD language."
+        )
+
     return {
-        "match_score": final_score,
-        "cosine_similarity": round(cosine_sim * 100, 2),
-        "skill_match_percentage": skill_comparison["skill_match_percentage"],
-        "keyword_density": round(keyword_density * 100, 2),
-        "matched_skills": skill_comparison["matched_skills"],
-        "missing_skills": skill_comparison["missing_skills"],
-        "verdict": verdict,
-        "recommendations": recommendations
+        # ── Core result ───────────────────────────────────────────────────────
+        "match_score":          scores["final_score"],
+        "verdict":              verdict,
+        "recommendations":      " | ".join(recommendations),
+
+        # ── Score breakdown (shown in Matching page) ──────────────────────────
+        "cosine_similarity":    scores["tfidf_score"],
+        "bert_score":           scores["bert_score"],       # ← NEW
+        "scoring_method":       scores["scoring_method"],   # ← NEW
+        "skill_match_percentage": scores["skill_match_pct"] * 100,
+        "keyword_density_score":  scores["keyword_density"],
+
+        # ── Skill detail ──────────────────────────────────────────────────────
+        "matched_skills":       matched_skills,
+        "missing_skills":       missing_skills,
     }

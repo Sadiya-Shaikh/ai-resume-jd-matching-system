@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import api from '../api/axios'
-import { Target, Zap, CheckCircle, XCircle, TrendingUp, Brain, BarChart3, Users, ChevronDown } from 'lucide-react'
+import { Target, Zap, CheckCircle, XCircle, TrendingUp, Brain, BarChart3, Users, ChevronDown, Mail } from 'lucide-react'
+import EmailShortlistModal from '../components/EmailShortlistModal'
+import ExportButtons from '../components/ExportButtons'
 
 const ScoreCircle = ({ score }) => {
   const color = score >= 75 ? '#10b981' : score >= 60 ? '#4f8eff' : score >= 50 ? '#f59e0b' : '#ef4444'
@@ -46,6 +48,11 @@ export default function Matching() {
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState('single')
 
+  // New state variables for email and export
+  const [selectedMatchIds, setSelectedMatchIds] = useState([])
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [showSingleEmailModal, setShowSingleEmailModal] = useState(false)
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -73,7 +80,7 @@ export default function Matching() {
 
   const handleBulkMatch = async () => {
     if (!selectedJd) return alert('Select a job description')
-    setLoading(true); setBulkResults(null)
+    setLoading(true); setBulkResults(null); setSelectedMatchIds([]) // Reset selections on new match
     try {
       const res = await api.post(`/match/bulk?jd_id=${selectedJd}`)
       setBulkResults(res.data)
@@ -121,7 +128,7 @@ export default function Matching() {
           { id: 'single', icon: Target, label: 'Single Match' },
           { id: 'bulk', icon: Zap, label: 'Bulk Match' }
         ].map(({ id, icon: Icon, label }) => (
-          <button key={id} onClick={() => { setMode(id); setResult(null); setBulkResults(null) }} style={{
+          <button key={id} onClick={() => { setMode(id); setResult(null); setBulkResults(null); setSelectedMatchIds([]) }} style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             padding: '9px 20px', borderRadius: '9px', border: 'none', cursor: 'pointer',
             background: mode === id ? 'white' : 'transparent',
@@ -226,18 +233,24 @@ export default function Matching() {
         {/* Single Result */}
         {result && mode === 'single' && (
           <div style={{ flex: 1, minWidth: '300px' }}>
-<div className="card scale-in" style={{ border: `1px solid ${verdictColor(result.verdict)}30`, marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Match Result</h3>
-              <span className="verdict-pill" style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
-                background: `${verdictColor(result.verdict)}15`, color: verdictColor(result.verdict),
-                border: `1px solid ${verdictColor(result.verdict)}30`
-              }}>
-                {verdictIcon(result.verdict)}
-                {result.verdict}
-              </span>
+            <div className="card scale-in" style={{ border: `1px solid ${verdictColor(result.verdict)}30`, marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Match Result</h3>
+                <span className="verdict-pill" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
+                  background: `${verdictColor(result.verdict)}15`, color: verdictColor(result.verdict),
+                  border: `1px solid ${verdictColor(result.verdict)}30`
+                }}>
+                  {verdictIcon(result.verdict)}
+                  {result.verdict}
+                </span>
+                <button
+                 onClick={() => setShowSingleEmailModal(true)}
+                 style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#2563eb', color: 'white', borderRadius: '10px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                >
+                <Mail size={13} /> Email Candidate
+                </button>
               </div>
 
               <ScoreCircle score={result.match_score} />
@@ -284,6 +297,31 @@ export default function Matching() {
         {/* Bulk Results */}
         {bulkResults && mode === 'bulk' && (
           <div style={{ flex: 1, minWidth: '300px' }}>
+            
+            {/* Added Action Bar Above Bulk Results */}
+            {bulkResults.results?.length > 0 && (
+              <div className="flex items-center justify-between mb-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span className="text-gray-400 text-sm" style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                  {selectedMatchIds.length > 0
+                    ? `${selectedMatchIds.length} candidate(s) selected`
+                    : 'Select candidates to email'}
+                </span>
+                <div className="flex gap-3" style={{ display: 'flex', gap: '12px' }}>
+                  <ExportButtons jdId={selectedJd} jdTitle={bulkResults.jd_title} />
+                  {selectedMatchIds.length > 0 && (
+                    <button
+                      onClick={() => setShowEmailModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#2563eb', color: 'white', borderRadius: '12px', fontSize: '14px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+                    >
+                      <Mail size={14} />
+                      Email {selectedMatchIds.length} Shortlisted
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="card scale-in">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Bulk Results</h3>
@@ -291,8 +329,8 @@ export default function Matching() {
                   <Users size={12} /> {bulkResults.total_resumes} Analyzed
                 </div>
               </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '20px' }}>{bulkResults.jd_title} — ranked by match score</p>
 
+              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '20px' }}>{bulkResults.jd_title} — ranked by match score</p>
               {bulkResults.results?.map((r, i) => (
                 <div key={r.match_id} style={{
                   display: 'flex', alignItems: 'center', gap: '16px', padding: '14px',
@@ -300,6 +338,21 @@ export default function Matching() {
                   background: i === 0 ? '#10b98108' : i === 1 ? '#4f8eff05' : '#ffffff03',
                   border: `1px solid ${i === 0 ? '#10b98125' : i === 1 ? '#4f8eff20' : 'var(--border)'}`
                 }}>
+                  
+                  {/* Added Checkbox Here */}
+                  <input
+                    type="checkbox"
+                    checked={selectedMatchIds.includes(r.match_id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMatchIds(prev => [...prev, r.match_id])
+                      } else {
+                        setSelectedMatchIds(prev => prev.filter(id => id !== r.match_id))
+                      }
+                    }}
+                    className="rounded border-gray-600"
+                  />
+
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0,
                     background: i === 0 ? '#10b98120' : i === 1 ? '#f59e0b20' : '#ffffff10',
@@ -345,6 +398,26 @@ export default function Matching() {
           </div>
         )}
       </div>
+
+      {/* Added Email Modal at the bottom */}
+      <EmailShortlistModal
+        isOpen={showEmailModal}
+        onClose={() => { setShowEmailModal(false); setSelectedMatchIds([]) }}
+        matchIds={selectedMatchIds}
+        jobTitle={bulkResults?.jd_title || ''}
+        mode="bulk"
+      />
+
+      {/* Single match email modal */}
+      <EmailShortlistModal
+        isOpen={showSingleEmailModal}
+        onClose={() => setShowSingleEmailModal(false)}
+        matchIds={result ? [result.match_id] : []}
+        jobTitle={jds.find(j => j.jd_id == selectedJd)?.title || ''}
+        candidateName={result?.candidate_name || ''}
+        mode="single"
+      />
+
     </div>
   )
 }

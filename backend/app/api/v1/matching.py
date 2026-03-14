@@ -24,37 +24,30 @@ async def match_single(
     current_user: Annotated[User, Depends(get_current_active_user)] = None,
     db: Session = Depends(get_db)
 ):
-    """
-    Match a single resume against a job description
-    """
-    # Get resume
+    """Match a single resume against a job description"""
+
     resume = db.query(Resume).filter(
         Resume.resume_id == resume_id,
         Resume.user_id == current_user.user_id
     ).first()
 
     if not resume:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Resume not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
 
-    # Get job description
     jd = db.query(JobDescription).filter(
         JobDescription.jd_id == jd_id,
         JobDescription.user_id == current_user.user_id
     ).first()
 
     if not jd:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job description not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job description not found")
 
-    # Run matching algorithm
+    # Run matching algorithm with skills
     result = match_resume_to_jd(
         resume_text=resume.extracted_text or "",
-        jd_text=jd.description or ""
+        jd_text=jd.description or "",
+        resume_skills=resume.skills_extracted or [],
+        jd_required_skills=jd.required_skills or []
     )
 
     # Save result to database
@@ -91,41 +84,34 @@ async def match_bulk(
     current_user: Annotated[User, Depends(get_current_active_user)] = None,
     db: Session = Depends(get_db)
 ):
-    """
-    Match ALL resumes against a single job description
-    """
-    # Get job description
+    """Match ALL resumes against a single job description"""
+
     jd = db.query(JobDescription).filter(
         JobDescription.jd_id == jd_id,
         JobDescription.user_id == current_user.user_id
     ).first()
 
     if not jd:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job description not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job description not found")
 
-    # Get all resumes for this user
     resumes = db.query(Resume).filter(
         Resume.user_id == current_user.user_id
     ).all()
 
     if not resumes:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No resumes found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No resumes found")
 
     results = []
 
     for resume in resumes:
+        # Run matching algorithm with skills
         result = match_resume_to_jd(
             resume_text=resume.extracted_text or "",
-            jd_text=jd.description or ""
+            jd_text=jd.description or "",
+            resume_skills=resume.skills_extracted or [],
+            jd_required_skills=jd.required_skills or []
         )
 
-        # Save each result
         db_result = MatchingResult(
             resume_id=resume.resume_id,
             jd_id=jd_id,
@@ -153,7 +139,6 @@ async def match_bulk(
             "missing_skills": result["missing_skills"]
         })
 
-    # Sort by match score (highest first)
     results.sort(key=lambda x: x["match_score"], reverse=True)
 
     return {
@@ -171,9 +156,8 @@ async def get_match_results(
     skip: int = 0,
     limit: int = 50
 ):
-    """
-    Get all matching results for current user
-    """
+    """Get all matching results for current user"""
+
     results = db.query(MatchingResult).join(Resume).filter(
         Resume.user_id == current_user.user_id
     ).offset(skip).limit(limit).all()

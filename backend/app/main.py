@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API router
+# Include ALL routers via api_router (defined in __init__.py)
 app.include_router(api_router, prefix="/api/v1")
 
 
