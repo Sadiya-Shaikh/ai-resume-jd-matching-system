@@ -253,7 +253,7 @@ export default function LandingPage() {
                   {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="#f59e0b" color="#f59e0b" style={{ marginRight: '2px' }} />)}
                 </div>
                 <span style={{ fontSize: '13px', color: '#3c4560' }}>
-                  Built with <span style={{ color: '#5a6380' }}>FastAPI · spaCy · TF-IDF · React</span>
+                  Built with <span style={{ color: '#5a6380' }}>FastAPI ·BERT · spaCy · TF-IDF · React</span>
                 </span>
               </div>
             </div>
@@ -384,7 +384,7 @@ export default function LandingPage() {
           <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
             {[
               { icon: <Brain size={22} color="#3b6fff" strokeWidth={1.8} />, bg: '#3b6fff', title: 'NLP Skill Extraction', desc: 'spaCy automatically pulls 500+ skills from any resume — programming languages, frameworks, databases, soft skills and more.' },
-              { icon: <GitMerge size={22} color="#7c5cfc" strokeWidth={1.8} />, bg: '#7c5cfc', title: 'TF-IDF Matching', desc: 'Cosine similarity compares resume content against job descriptions to produce a precise 0–100% match score.' },
+              { icon: <GitMerge size={22} color="#7c5cfc" strokeWidth={1.8} />, bg: '#7c5cfc', title: 'BERT + TF-IDF Matching', desc: 'BERT semantic embeddings + TF-IDF cosine similarity produce a hybrid match score with 65% verdict accuracy on tested data.' },
               { icon: <Zap size={22} color="#f59e0b" strokeWidth={1.8} />, bg: '#f59e0b', title: 'Bulk Processing', desc: 'Upload 100 resumes at once. Match all candidates against any JD and get ranked results in under 2 minutes.' },
               { icon: <Award size={22} color="#10b981" strokeWidth={1.8} />, bg: '#10b981', title: 'Smart Verdicts', desc: 'Every match gets a clear verdict: Highly Recommended, Recommended, Consider, or Not Recommended.' },
               { icon: <Search size={22} color="#06b6d4" strokeWidth={1.8} />, bg: '#06b6d4', title: 'Skill Gap Analysis', desc: 'See exactly which required skills a candidate is missing so you make faster, more informed hiring decisions.' },
@@ -418,7 +418,7 @@ export default function LandingPage() {
             {[
               { icon: <Upload size={24} color="#3b6fff" strokeWidth={1.8} />, bg: '#3b6fff', n: '01', title: 'Upload Resumes', desc: 'Drag and drop PDF resumes. pdfplumber extracts all text, then spaCy NLP identifies every skill automatically.' },
               { icon: <Briefcase size={24} color="#7c5cfc" strokeWidth={1.8} />, bg: '#7c5cfc', n: '02', title: 'Add Job Description', desc: 'Paste your JD directly. Define the role, required skills, and experience level. Supports any industry or stack.' },
-              { icon: <TrendingUp size={24} color="#10b981" strokeWidth={1.8} />, bg: '#10b981', n: '03', title: 'Get Ranked Results', desc: 'AI scores every resume using TF-IDF + cosine similarity. Results ranked highest to lowest match instantly.' },
+              { icon: <TrendingUp size={24} color="#10b981" strokeWidth={1.8} />, bg: '#10b981', n: '03', title: 'Get Ranked Results', desc: 'BERT + TF-IDF hybrid AI scores every resume. Export results as CSV/PDF or email shortlisted candidates directly.' },
             ].map((s, i) => (
               <div key={i} style={{ background: '#0b0d1a', border: '1px solid #161929', borderRadius: '18px', padding: '32px 28px', position: 'relative', overflow: 'hidden', transition: 'all 0.25s' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = s.bg + '40'; e.currentTarget.style.transform = 'translateY(-4px)' }}
@@ -451,7 +451,7 @@ export default function LandingPage() {
               RecruitAI is a final-year BCS project using production-grade technologies — FastAPI, PostgreSQL, spaCy NLP, and React — to automate the most time-consuming part of hiring.
             </p>
             <p style={{ fontSize: '15px', color: '#3c4560', lineHeight: 1.8 }}>
-              Traditional resume screening takes 23 hours per hire on average. RecruitAI cuts that to minutes using TF-IDF vectorization and cosine similarity matching.
+              Traditional resume screening takes 23 hours per hire on average. RecruitAI cuts that to minutes using BERT + TF-IDF hybrid scoring, achieving 65% verdict accuracy on 20 tested resume-JD pairs.
             </p>
           </div>
           <div style={{ flex: '1 1 300px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>

@@ -26,7 +26,7 @@
 //   />
 
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../api/axios'
 import { X, Mail, Send, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 export default function EmailShortlistModal({
@@ -55,14 +55,14 @@ export default function EmailShortlistModal({
     setResults(null)
     try {
       const endpoint = mode === 'single'
-        ? '/api/v1/shortlist/email/single'
-        : '/api/v1/shortlist/email'
+        ? '/shortlist/email/single'
+        : '/shortlist/email'
 
       const payload = mode === 'single'
         ? { match_id: matchIds[0], custom_message: message, subject }
         : { match_ids: matchIds, custom_message: message, subject }
 
-      const { data } = await axios.post(endpoint, payload)
+      const { data } = await api.post(endpoint, payload)
 
       // Normalise single response to same shape as bulk
       if (mode === 'single') {

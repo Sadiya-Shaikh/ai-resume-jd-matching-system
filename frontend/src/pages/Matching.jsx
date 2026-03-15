@@ -1,23 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import api from '../api/axios'
 import { Target, Zap, CheckCircle, XCircle, TrendingUp, Brain, BarChart3, Users, ChevronDown, Mail } from 'lucide-react'
 import EmailShortlistModal from '../components/EmailShortlistModal'
 import ExportButtons from '../components/ExportButtons'
 
+// ── FIX 1: Score Circle with working fill animation ──────────────────────────
 const ScoreCircle = ({ score }) => {
   const color = score >= 75 ? '#10b981' : score >= 60 ? '#4f8eff' : score >= 50 ? '#f59e0b' : '#ef4444'
   const size = 130
   const radius = 54
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
+  const circleRef = useRef(null)
+
+  useEffect(() => {
+    if (circleRef.current) {
+      circleRef.current.style.strokeDashoffset = circumference
+      setTimeout(() => {
+        if (circleRef.current) {
+          circleRef.current.style.strokeDashoffset = offset
+        }
+      }, 100)
+    }
+  }, [score, offset, circumference])
+
   return (
     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#ffffff08" strokeWidth="10" />
-        <circle className="score-ring-path" cx={size/2} cy={size/2} r={radius} fill="none" stroke={color}
+        <circle
+          ref={circleRef}
+          cx={size/2} cy={size/2} r={radius}
+          fill="none" stroke={color}
           strokeWidth="10" strokeLinecap="round"
-          strokeDasharray={circumference} strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)' }}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference}
+          style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)' }}
         />
       </svg>
       <div style={{ marginTop: '-90px', marginBottom: '20px' }}>
@@ -38,6 +56,27 @@ const MetricCard = ({ icon: Icon, label, value, color }) => (
   </div>
 )
 
+// ── FIX 4: Skeleton loader ────────────────────────────────────────────────────
+const SkeletonCard = () => (
+  <div className="card" style={{ flex: 1, minWidth: '300px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+      <div style={{ width: '100px', height: '20px', background: '#ffffff10', borderRadius: '6px', animation: 'pulse 1.5s infinite' }} />
+      <div style={{ width: '140px', height: '30px', background: '#ffffff10', borderRadius: '20px', animation: 'pulse 1.5s infinite' }} />
+    </div>
+    <div style={{ width: '130px', height: '130px', borderRadius: '50%', background: '#ffffff10', margin: '0 auto 20px', animation: 'pulse 1.5s infinite' }} />
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+      {[1,2,3].map(i => (
+        <div key={i} style={{ height: '80px', background: '#ffffff08', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
+      ))}
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+      <div style={{ height: '100px', background: '#ffffff08', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
+      <div style={{ height: '100px', background: '#ffffff08', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
+    </div>
+    <div style={{ height: '80px', background: '#ffffff08', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
+  </div>
+)
+
 export default function Matching() {
   const [resumes, setResumes] = useState([])
   const [jds, setJds] = useState([])
@@ -47,8 +86,6 @@ export default function Matching() {
   const [bulkResults, setBulkResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState('single')
-
-  // New state variables for email and export
   const [selectedMatchIds, setSelectedMatchIds] = useState([])
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showSingleEmailModal, setShowSingleEmailModal] = useState(false)
@@ -80,7 +117,7 @@ export default function Matching() {
 
   const handleBulkMatch = async () => {
     if (!selectedJd) return alert('Select a job description')
-    setLoading(true); setBulkResults(null); setSelectedMatchIds([]) // Reset selections on new match
+    setLoading(true); setBulkResults(null); setSelectedMatchIds([])
     try {
       const res = await api.post(`/match/bulk?jd_id=${selectedJd}`)
       setBulkResults(res.data)
@@ -112,13 +149,23 @@ export default function Matching() {
 
   return (
     <div className="fade-up">
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+      {/* FIX 2: Mobile responsive + all animations */}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @media (max-width: 768px) {
+          .matching-grid { flex-direction: column !important; }
+          .matching-grid > div { width: 100% !important; min-width: unset !important; flex-shrink: 1 !important; }
+          .metric-grid { grid-template-columns: 1fr 1fr !important; }
+          .skills-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '34px', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '6px' }}>AI Matching</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Match resumes against job descriptions using TF-IDF + spaCy NLP
+          Match resumes against job descriptions using BERT + TF-IDF hybrid scoring
         </p>
       </div>
 
@@ -137,13 +184,14 @@ export default function Matching() {
             fontFamily: 'DM Sans, sans-serif', transition: 'all 0.2s',
             boxShadow: mode === id ? '0 2px 8px #00000030' : 'none'
           }}>
-            <Icon size={15} />
-            {label}
+            <Icon size={15} />{label}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      {/* FIX 2: Added matching-grid className */}
+      <div className="matching-grid" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+
         {/* Controls Panel */}
         <div className="card" style={{ width: '300px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
@@ -214,11 +262,12 @@ export default function Matching() {
             </div>
           )}
 
-          {/* Algorithm Info */}
+          {/* FIX 5: Updated algorithm weights */}
           <div style={{ marginTop: '20px', padding: '14px', background: '#ffffff05', borderRadius: '10px', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.8px', marginBottom: '10px' }}>ALGORITHM</div>
             {[
-              ['TF-IDF Similarity', '60%', '#4f8eff'],
+              ['BERT Semantic', '36%', '#4f8eff'],
+              ['TF-IDF Similarity', '24%', '#6366f1'],
               ['Skill Match', '30%', '#8b5cf6'],
               ['Keyword Density', '10%', '#10b981'],
             ].map(([label, pct, color]) => (
@@ -230,11 +279,14 @@ export default function Matching() {
           </div>
         </div>
 
+        {/* FIX 4: Skeleton while loading */}
+        {loading && mode === 'single' && <SkeletonCard />}
+
         {/* Single Result */}
         {result && mode === 'single' && (
           <div style={{ flex: 1, minWidth: '300px' }}>
             <div className="card scale-in" style={{ border: `1px solid ${verdictColor(result.verdict)}30`, marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Match Result</h3>
                 <span className="verdict-pill" style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -242,26 +294,29 @@ export default function Matching() {
                   background: `${verdictColor(result.verdict)}15`, color: verdictColor(result.verdict),
                   border: `1px solid ${verdictColor(result.verdict)}30`
                 }}>
-                  {verdictIcon(result.verdict)}
-                  {result.verdict}
+                  {verdictIcon(result.verdict)}{result.verdict}
                 </span>
                 <button
-                 onClick={() => setShowSingleEmailModal(true)}
-                 style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#2563eb', color: 'white', borderRadius: '10px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                  onClick={() => setShowSingleEmailModal(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#2563eb', color: 'white', borderRadius: '10px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
                 >
-                <Mail size={13} /> Email Candidate
+                  <Mail size={13} /> Email Candidate
                 </button>
               </div>
 
+              {/* FIX 1: Animated score circle */}
               <ScoreCircle score={result.match_score} />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-                <MetricCard icon={Brain} label="Text Similarity" value={result.cosine_similarity} color="#4f8eff" />
-                <MetricCard icon={Target} label="Skill Match" value={result.skill_match_percentage} color="#8b5cf6" />
-                <MetricCard icon={BarChart3} label="Keyword Density" value={result.keyword_density} color="#10b981" />
+              {/* FIX 2: metric-grid className for mobile */}
+              <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                <MetricCard icon={Brain} label="Text Similarity" value={(result.cosine_similarity * 100).toFixed(1)} color="#4f8eff" />
+                <MetricCard icon={Target} label="Skill Match" value={result.skill_match_percentage?.toFixed(1) || '0'} color="#8b5cf6" />
+                {/* FIX 3: Keyword Density fixed */}
+                <MetricCard icon={BarChart3} label="Keyword Density" value={((result.keyword_density_score || result.keyword_density || 0) * 100).toFixed(1)} color="#10b981" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+              {/* FIX 2: skills-grid className for mobile */}
+              <div className="skills-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
                 <div style={{ background: '#10b98108', border: '1px solid #10b98125', borderRadius: '12px', padding: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: '#10b981', marginBottom: '10px' }}>
                     <CheckCircle size={13} /> Matched Skills ({result.matched_skills?.length || 0})
@@ -297,21 +352,18 @@ export default function Matching() {
         {/* Bulk Results */}
         {bulkResults && mode === 'bulk' && (
           <div style={{ flex: 1, minWidth: '300px' }}>
-            
-            {/* Added Action Bar Above Bulk Results */}
             {bulkResults.results?.length > 0 && (
-              <div className="flex items-center justify-between mb-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <span className="text-gray-400 text-sm" style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
                   {selectedMatchIds.length > 0
                     ? `${selectedMatchIds.length} candidate(s) selected`
                     : 'Select candidates to email'}
                 </span>
-                <div className="flex gap-3" style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <ExportButtons jdId={selectedJd} jdTitle={bulkResults.jd_title} />
                   {selectedMatchIds.length > 0 && (
                     <button
                       onClick={() => setShowEmailModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors"
                       style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#2563eb', color: 'white', borderRadius: '12px', fontSize: '14px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
                     >
                       <Mail size={14} />
@@ -331,6 +383,7 @@ export default function Matching() {
               </div>
 
               <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '20px' }}>{bulkResults.jd_title} — ranked by match score</p>
+
               {bulkResults.results?.map((r, i) => (
                 <div key={r.match_id} style={{
                   display: 'flex', alignItems: 'center', gap: '16px', padding: '14px',
@@ -338,8 +391,6 @@ export default function Matching() {
                   background: i === 0 ? '#10b98108' : i === 1 ? '#4f8eff05' : '#ffffff03',
                   border: `1px solid ${i === 0 ? '#10b98125' : i === 1 ? '#4f8eff20' : 'var(--border)'}`
                 }}>
-                  
-                  {/* Added Checkbox Here */}
                   <input
                     type="checkbox"
                     checked={selectedMatchIds.includes(r.match_id)}
@@ -350,9 +401,7 @@ export default function Matching() {
                         setSelectedMatchIds(prev => prev.filter(id => id !== r.match_id))
                       }
                     }}
-                    className="rounded border-gray-600"
                   />
-
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0,
                     background: i === 0 ? '#10b98120' : i === 1 ? '#f59e0b20' : '#ffffff10',
@@ -369,7 +418,7 @@ export default function Matching() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'Syne', color: verdictColor(r.verdict), letterSpacing: '-0.5px' }}>{r.match_score}%</div>
-                    <span className="verdict-pill" style={{
+                    <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: '4px',
                       fontSize: '11px', color: verdictColor(r.verdict), fontWeight: 700,
                       padding: '2px 8px', borderRadius: '20px', background: `${verdictColor(r.verdict)}15`
@@ -399,7 +448,6 @@ export default function Matching() {
         )}
       </div>
 
-      {/* Added Email Modal at the bottom */}
       <EmailShortlistModal
         isOpen={showEmailModal}
         onClose={() => { setShowEmailModal(false); setSelectedMatchIds([]) }}
@@ -408,7 +456,6 @@ export default function Matching() {
         mode="bulk"
       />
 
-      {/* Single match email modal */}
       <EmailShortlistModal
         isOpen={showSingleEmailModal}
         onClose={() => setShowSingleEmailModal(false)}
@@ -417,7 +464,6 @@ export default function Matching() {
         candidateName={result?.candidate_name || ''}
         mode="single"
       />
-
     </div>
   )
 }

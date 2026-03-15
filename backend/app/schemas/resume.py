@@ -2,8 +2,9 @@
 Resume schemas for validation
 """
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import List, Optional
 from datetime import datetime
+from typing import Union, List
 
 
 class ResumeUpload(BaseModel):
@@ -31,7 +32,7 @@ class ResumeResponse(BaseModel):
     file_name: str
     file_path: str
     extracted_text: Optional[str] = None
-    skills_extracted: Optional[dict] = None  # ← ADD THIS LINE
+    skills_extracted: Optional[Union[List[str], dict]] = None# ← ADD THIS LINE
     uploaded_at: datetime
     
     class Config:

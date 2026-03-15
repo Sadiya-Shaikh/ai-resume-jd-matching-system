@@ -124,13 +124,9 @@ def extract_name_from_text(text: str) -> Optional[str]:
 def parse_resume(pdf_path: str) -> dict:
     """
     Parse resume and extract all information
-    
-    Args:
-        pdf_path: Path to PDF file
-        
-    Returns:
-        Dictionary with extracted information
     """
+    from app.utils.skill_extractor import get_skill_names_only
+
     # Extract raw text
     raw_text = extract_text_from_pdf(pdf_path)
     
@@ -138,14 +134,18 @@ def parse_resume(pdf_path: str) -> dict:
     cleaned_text = clean_text(raw_text)
     
     # Extract metadata
-    candidate_name = extract_name_from_text(raw_text)
+    candidate_name  = extract_name_from_text(raw_text)
     candidate_email = extract_email(raw_text)
     candidate_phone = extract_phone(raw_text)
     
+    # ── Extract skills ──────────────────────────────
+    skills = get_skill_names_only(raw_text)
+    
     return {
-        "extracted_text": raw_text,
-        "cleaned_text": cleaned_text,
-        "candidate_name": candidate_name,
-        "candidate_email": candidate_email,
-        "candidate_phone": candidate_phone
+        "extracted_text":   raw_text,
+        "cleaned_text":     cleaned_text,
+        "candidate_name":   candidate_name,
+        "candidate_email":  candidate_email,
+        "candidate_phone":  candidate_phone,
+        "skills_extracted": skills,       # ← NEW
     }

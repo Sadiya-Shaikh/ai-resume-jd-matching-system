@@ -106,6 +106,7 @@ async def upload_resume(
         # Extract text and skills
         extracted_text = parsed_data.get("extracted_text", "")
         skills_data = extract_skills_from_text(extracted_text)
+        skills_list = [s["skill"] for s in skills_data.get("skills", [])]
         
         # Create resume record
         db_resume = Resume(
